@@ -1,0 +1,346 @@
+<html>
+<body>
+
+<header>
+<h1 id="tempo"class="tempo"> 0 </h1>
+</header>
+
+<button onclick="pause()"id="pausar"class="botoes"> > </button>
+<button onclick="reset()"class="botoes"> Reset </button> <input type="numbero" id="timeout" placeholder="timeout" value="timeout" onfocus="limpatimeout()"></input>
+<br><br><br>
+<div class="inputs">
+<label>Insira os milisecs para um tick: </label> <input id="tick" value= 10 type="number" placeholder="insira o tick dos testes" class="textbox">  <br><br><br>
+<label>Insira qual a chante de acerto:</label><input id="porcentagem" value = 10 type="number" placeholder="Insira a porcentagem de acerto" class="textbox"> <br><br><br>
+<label>Insira quantas amostras o teste realizara:</label><input id="acertos" value = 10 type="number" placeholder="Insira o numero de acertos" class="textbox"> <br><br><br><br>
+</div> <br>
+<button onclick="confirma()" class="botoes"> confirma seleção</button>
+
+<br> <br> <br> <br> <br>
+<table class="tabela">
+<!--Media, Moda, Desvio Médio, Desvio padrão-->
+<thead>
+<th>  </th>
+<th> Tempo por teste </th>
+<th> Numero de tentativas </th>
+</thead>
+
+<tr><th> Media </th> <td id="mediatempo"> </td> <td id="mediatent"> </td> <br></tr>
+<tr><th> Moda </th> <td id="modatempo"> </td> <td id="modatent"> </td> <br></tr>
+<tr><th> Desvio Médio </th> <td id="desvmedtempo"> </td> <td id="desvmedtent"> </td> </tr>
+<tr><th> Desvio Padrão </th> <td id="desvpadtempo"> </td> <td id="desvpadtent"> </td> </tr>
+
+</table>
+
+<table class="tabela">
+    <thead>
+        <tr>
+        <th> Numero de acertos total: </th>
+        <th id="contacertos"> </th> </tr> 
+    <tr><th> Numero de acertos do teste </th><th id="conteacertoslocal"></th></tr>
+    <tr><th> Numero de tentativas do teste </th><th id="contatent"></th></tr>
+    </thead> 
+    </table>
+        <table class="tabela">
+           <td id="showconfig"> Esperando Input </td>
+        </table>
+        <table class="tabela">
+            <tr><td>Numeros de tentativas esperado</td><td id="tentesperado"> </td> </tr>
+            <tr><td>Tempo necessario por teste esperado</td><td id="tempoesperado"> </td> </tr>
+        </table>
+</body>
+<div class="rodape">
+<br><br><br> <br><br><br>
+<p id="arraytent"></p>
+<p id="arraytempo"></p> 
+</div>
+
+</html>
+
+<script>
+
+//significado das variaveis:
+//milisec,sec,min= numeros mostrados no contador. timevalue= tempo por tick, temptick = timer pros tick, ticks= tempo ate o aleatorizador, start= play,pause, porcentagem= change de acerto, numgerado= numero gerado pelo aleatorizador, acertos = numero de acertos para o fim do teste, temptest = timer ate o acerto, contagemtent = numero de tentativas ate o acerto, contacertos = conta quantos acertos ja foram computados, totaltent = numero total de tentativas no teste.
+var numgerado = 0
+var contagemtent = 0
+let timevalue = 1
+var contacertos = 0
+var contacertostotal = 0
+var totaltent = 0
+
+var tempos = {
+    milisec : 0,
+    sec : 0,
+    min : 0,  
+    temptick : 0,
+    temptest : 0,
+}
+var configs = {
+    start : 0,
+    ticks : 100,
+    porcentagem : 0,
+    acertos : 0,
+}
+var dados = {
+tempos : [],
+tentativas : [],
+}
+
+function confirma(){
+    configs.ticks = parseInt(document.getElementById("tick").value)
+    configs.porcentagem = 100 - parseFloat(document.getElementById("porcentagem").value).toFixed(2)
+    configs.acertos = parseInt(document.getElementById("acertos").value)
+    console.log("Ticks= " + configs.ticks + ", Porcentagem=  " + (100-configs.porcentagem) + "%, Acertos=  " + configs.acertos)
+    document.getElementById("showconfig").innerHTML = "Ticks= " + configs.ticks + ", Porcentagem=  " + (100-configs.porcentagem) + "%, Acertos=  " + configs.acertos;
+    document.getElementById("tentesperado").innerHTML = (100/(100 - configs.porcentagem))
+    document.getElementById("tempoesperado").innerHTML = (100/(100 - configs.porcentagem))*configs.ticks
+    document.getElementById("tick").value = ""
+    document.getElementById("porcentagem").value = ""
+    document.getElementById("acertos").value = ""
+
+}
+
+//avança o tempo
+function next(){
+tempos.temptick += timevalue
+tempos.temptest += timevalue
+tempos.milisec += timevalue
+document.getElementById("timeout").value --
+if (document.getElementById("timeout").value <= 0){
+    pause()
+    encerrarteste()
+}
+document.getElementById("tempo").innerHTML = tempos.min + ":" + tempos.sec + ":" + tempos.milisec/10;
+if (tempos.milisec >= 1000){
+tempos.milisec = 0
+tempos.sec += 1
+}
+if (tempos.sec >= 60){
+tempos.sec = 0
+tempos.min += 1
+}
+aleatorio()
+}
+
+//Testa os valores aleatorios
+function aleatorio(){
+
+//qnd der o tempo do tick, testar o numeros
+    if (tempos.temptick >= configs.ticks){
+        numgerado = parseFloat((Math.random()*100).toFixed(2))
+        tempos.temptick = 0
+        contagemtent += 1
+        totaltent += 1
+        document.getElementById("contatent").innerHTML = totaltent
+
+        if (numgerado > configs.porcentagem ){
+            console.log("acertou, tempo levado: " + tempos.temptest + " Numero de tentativas: " + contagemtent)
+            dados.tentativas.push(parseFloat(contagemtent))
+            dados.tempos.push(parseFloat(tempos.temptest))
+            tempos.temptest = 0
+            contagemtent = 0
+            contacertos +=1
+            contacertostotal +=1
+            document.getElementById("contacertos").innerHTML = contacertostotal
+            document.getElementById("conteacertoslocal").innerHTML = contacertos
+            document.getElementById("arraytempo").innerHTML = "Tempos registrados:  " + dados.tempos.sort()
+            document.getElementById("arraytent").innerHTML = "Tentativas registrada:  " + dados.tentativas.sort()
+            if (contacertos == configs.acertos){
+                encerrarteste()
+                pause()
+            }
+
+        }
+}
+}
+
+function encerrarteste(){
+contacertos = 0
+totaltent = 0
+document.getElementById("conteacertoslocal").innerHTML = contacertos
+document.getElementById("mediatempo").innerHTML = media(dados.tempos)
+document.getElementById("mediatent").innerHTML = media(dados.tentativas)
+document.getElementById("modatempo").innerHTML = moda(dados.tempos)
+document.getElementById("modatent").innerHTML = moda(dados.tentativas)
+document.getElementById("desvmedtempo").innerHTML = desvios(dados.tempos, 0)
+document.getElementById("desvmedtent").innerHTML = desvios(dados.tentativas, 0)
+document.getElementById("desvpadtempo").innerHTML = desvios(dados.tempos, 1)
+document.getElementById("desvpadtent").innerHTML = desvios(dados.tentativas, 1)
+document.getElementById("contatent").innerHTML = totaltent
+dados = {
+tempos : [],
+tentativas : [],
+}
+}
+
+function moda(entrada){
+var vars = {
+    array : [],
+    streak : 0,
+    value: 0,
+}
+var sort = entrada.sort()
+// Encontra moda
+for (i=0; i < sort.length; i++) {
+    vars.array.push(sort[i])
+    if (sort[i] != sort[i+1] ) {
+        
+        if (vars.array.length > vars.streak){
+            console.log(vars.array)
+            vars.streak = vars.array.length
+            vars.value = vars.array[0]
+            
+        } else if (vars.array.length == vars.streak) {
+            vars.value = "Indefinida"
+        }
+        vars.array = []
+    }
+}
+    return vars.value
+}
+
+function media(entrada){
+var soma = 0 
+//console.log(array)
+    for (i=0; i<entrada.length; i++){
+        soma += parseFloat(entrada[i])
+    }
+let output = soma/entrada.length
+
+    return output
+}
+
+//quando tipo=1, o desvio calculado sera o desvio padrao, caso o contrario sera desvio medio.
+function desvios(array,tipo){
+var desvios = array
+var mean = media(array)
+    for (i=0; i<array.length;i++){
+        desvios[i] = mean - array[i]
+}
+
+if (tipo == 1){
+for (i=0; i<desvios.length;i++){
+    desvios[i] = desvios[i]**2
+}
+mean = media(desvios)
+return parseFloat(Math.sqrt(Math.abs(mean))).toFixed(4)
+} else {
+    return media(desvios)
+}
+
+}
+
+//botao de pause apertado
+function pause(){
+if (configs.start == 0){
+    timer = setInterval(next,timevalue)
+    configs.start = 1
+    document.getElementById("pausar").innerHTML = "||"
+    console.log("play")
+} else if(configs.start == 1){
+    timer = clearInterval(timer)
+    configs.start = 0
+    document.getElementById("pausar").innerHTML = ">"
+    console.log("pause")
+}}
+
+//reseta o cronometro
+function reset(){
+tempos.milisec = 0
+tempos.sec = 0
+tempos.min = 0
+document.getElementById("tempo").innerHTML = tempos.min + ":" + tempos.sec + ":" + tempos.milisec/10
+encerrarteste()
+}
+
+function limpatimeout(){
+    document.getElementById("timeout").value = ""
+}
+</script>
+
+
+
+
+
+
+
+
+<style>
+body{
+background-color: lightblue;
+font-family: "monaco";
+text-align: center;
+}
+.inputs [type= text]{
+   margin-left:auto; 
+   margin-right:auto;
+}
+
+label{
+    border-radius: 20px;
+    width: 250px;
+    text-align: right;
+    width: 350px; 
+    top: 50%;
+    right: 0px;
+    padding-left:auto; 
+    padding-right:auto;
+    font-size: 20px;
+}
+#timeout{
+    height: 40px;
+    width: 60px;
+    vertical-align: top;
+    text-align: center;
+}
+.textbox {
+    width: 100%;
+    position: absolute;
+	height:70px;
+	border-radius:5px;
+	background-color: rgb(255, 255, 255);
+	margin-left:2px;
+    position:relative;
+    font-size: 25px;
+    text-align: center;
+}
+.tempo{
+font-size:50px;
+color: #4CAF50;
+text-align: center;
+padding: 50px;
+text-shadow: 2px 0 black, -2px 0 black, 0 2px black, 0 -2px black,
+             1px 1px black, -1px -1px black, 1px -1px black, -1px 1px black;
+}
+
+.botoes{
+background-color: #008CBA;
+border: 2px doted black;
+font-size: 30px;
+text-align: center;
+margin-left:auto; 
+margin-right:auto;
+
+}
+ 
+.tabela{
+    border: solid 3px black;
+    color: black;
+    margin-left:auto; 
+    margin-right:auto;
+
+}
+
+th, tr, td {
+    border: solid 5px black;
+    color: black;
+    padding: 20px;
+    text-align: center;
+    font-size: 20px;
+
+}
+
+.rodape {
+    word-wrap: break-word;
+    font-size: 20px;
+}
+</style>
